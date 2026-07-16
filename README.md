@@ -95,16 +95,17 @@ later without re-seeding.
 
 | Page | What it shows |
 |---|---|
-| **Overview** | KPI cards (visits, unique visitors, avg happiness, peak hour), visits-by-zone chart, forecast panel, anomaly alerts panel, period-over-period comparison toggle, CSV/PDF export |
-| **Visits & happiness** | Daily happiness trend, happiness by zone |
-| **Zone analytics** | Traffic density per zone (a table, not just a chart, so mood + avg duration sit alongside volume), hour-of-day heatmap |
-| **Journeys** | Sankey diagram of Entry → zones → Exit, built from real zone-to-zone transitions in the data |
+| **Overview** | KPI cards (each linking to its detail page), insight cards (busiest zone, happiest zone, zone needing attention), visits-by-zone chart (bars link to Zone analytics), gender/age donut breakdowns, forecast panel, anomaly alerts panel (each linking to Zone analytics), period-over-period comparison toggle, CSV/PDF export |
+| **Visits & happiness** | Daily happiness trend, happiness by zone, day-of-week × hour heatmaps (visits volume and mood side by side), avg wait-time-by-hour chart |
+| **Zone analytics** | Traffic and happiness treemaps, daily zone entries as a stacked chart (with a show/hide-weekends toggle), a traffic density table (mood + avg duration alongside volume), hour-of-day heatmap |
+| **Journeys** | Sankey diagram of Entry → zones → Exit — hovering a flow highlights it through to the next zone — plus stat cards (avg zones/journey, avg dwell, departure-flow share, % exceeding a 120-min dwell) and a morning/afternoon/evening time-of-day filter |
 | **At-risk passengers** | Table of anonymous, persistent visitor IDs flagged for low average happiness (≤4.5/10) or a visit with ≥120 minutes total terminal time |
 
 Beyond the reference dashboard's scope, this demo adds:
 
-- **Anomaly alerts** — flags any zone whose happiness or traffic deviates ≥20% from its own
-  trailing 14-day baseline (`getAnomalyAlerts` in `src/lib/queries.ts`)
+- **Anomaly alerts** — scans the last 7 days (not just "today") and flags any zone whose
+  happiness or traffic deviates ≥20% from its own trailing 14-day baseline as of that day,
+  keeping the worst deviation per zone+metric (`getAnomalyAlerts` in `src/lib/queries.ts`)
 - **Period-over-period comparison** — a toggle on Overview that re-runs the same KPIs over
   the immediately preceding equivalent date range and shows the % delta
 - **Forecast panel** — projects the next 5 days' footfall from trailing 4-week weekday
@@ -112,6 +113,8 @@ Beyond the reference dashboard's scope, this demo adds:
   trained model — see `getForecast`)
 - **CSV/PDF export** — generated client-side from the same data already on the page, no
   server round-trip
+- **Gender/age demographics** — synthetic per-visitor gender and age band, generated once per
+  visitor and held constant across their visits, same as happiness and duration
 
 ## Running locally
 

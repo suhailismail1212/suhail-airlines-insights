@@ -37,7 +37,9 @@ CREATE TABLE IF NOT EXISTS zones (
 
 CREATE TABLE IF NOT EXISTS visitors (
   id TEXT PRIMARY KEY,
-  first_seen TEXT NOT NULL
+  first_seen TEXT NOT NULL,
+  gender TEXT NOT NULL,
+  age_band TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS visits (

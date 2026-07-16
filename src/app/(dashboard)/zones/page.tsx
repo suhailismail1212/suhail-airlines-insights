@@ -1,22 +1,51 @@
 import { getDatasetMaxDate } from "@/lib/dates";
 import { resolveRange } from "@/lib/searchParams";
-import { getZoneFootfall, getZoneHourHeatmap } from "@/lib/queries";
+import { getHappinessByZone, getZoneFootfall, getZoneHourHeatmap, getZoneTimeSeries } from "@/lib/queries";
+import { intensityColor, sentimentColor } from "@/lib/colorScale";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { ZoneHeatmap } from "@/components/ZoneHeatmap";
+import { ZoneTreemap } from "@/components/charts/ZoneTreemap";
+import { ZoneTimeSeriesChart } from "@/components/charts/ZoneTimeSeriesChart";
+import { WeekendToggle } from "@/components/WeekendToggle";
 
 export default async function ZonesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ start?: string; end?: string }>;
+  searchParams: Promise<{ start?: string; end?: string; weekends?: string }>;
 }) {
   const params = await searchParams;
   const range = resolveRange(params);
   const maxDate = getDatasetMaxDate();
+  const includeWeekends = params.weekends !== "0";
 
   const footfall = getZoneFootfall(range);
+  const happinessByZone = getHappinessByZone(range);
   const heatmap = getZoneHourHeatmap(range);
   const maxEntries = Math.max(...footfall.map((z) => z.entries), 1);
+
+  const trafficTreemapData = footfall.map((z) => ({
+    name: z.name,
+    value: z.entries,
+    fill: intensityColor(z.entries, maxEntries),
+    displayValue: z.entries.toLocaleString(),
+  }));
+
+  const happinessTreemapData = happinessByZone.map((z) => ({
+    name: z.name,
+    value: z.avgHappiness,
+    fill: sentimentColor(z.avgHappiness),
+    displayValue: `${z.avgHappiness.toFixed(1)}/10`,
+  }));
+
+  const timeSeriesRows = getZoneTimeSeries(range, includeWeekends);
+  const zoneNames = Array.from(new Set(timeSeriesRows.map((r) => r.zoneName)));
+  const byDate = new Map<string, Record<string, string | number>>();
+  for (const row of timeSeriesRows) {
+    if (!byDate.has(row.date)) byDate.set(row.date, { date: row.date });
+    byDate.get(row.date)![row.zoneName] = row.entries;
+  }
+  const timeSeriesData = Array.from(byDate.values());
 
   return (
     <div>
@@ -26,6 +55,29 @@ export default async function ZonesPage({
         range={range}
         maxDate={maxDate}
       />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <Card>
+          <CardTitle subtitle="Block size = entries. Every zone entry counted, including pass-through.">
+            Traffic by zone
+          </CardTitle>
+          <ZoneTreemap data={trafficTreemapData} />
+        </Card>
+        <Card>
+          <CardTitle subtitle="Block size = happiness score. Red is unhappy, sage is happy.">
+            Happiness by zone
+          </CardTitle>
+          <ZoneTreemap data={happinessTreemapData} />
+        </Card>
+      </div>
+
+      <Card className="mb-4">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <CardTitle subtitle="Daily zone entries, stacked by zone">Zone entries over time</CardTitle>
+          <WeekendToggle enabled={includeWeekends} />
+        </div>
+        <ZoneTimeSeriesChart data={timeSeriesData} zoneNames={zoneNames} />
+      </Card>
 
       <Card className="mb-4">
         <CardTitle subtitle="Every zone entry counted, including pass-through — measures movement & frequency, not unique visits">

@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { clsx } from "clsx";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 
 const PRESETS = [
   { label: "7d", days: 7 },
@@ -12,6 +14,8 @@ export function DateRangePicker({ start, end, maxDate }: { start: string; end: s
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const activeDays = end === maxDate ? differenceInCalendarDays(parseISO(end), parseISO(start)) + 1 : null;
 
   function updateRange(newStart: string, newEnd: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -35,7 +39,12 @@ export function DateRangePicker({ start, end, maxDate }: { start: string; end: s
             key={p.label}
             type="button"
             onClick={() => applyPreset(p.days)}
-            className="px-2.5 py-1 text-xs rounded-md hover:bg-white text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+            className={clsx(
+              "px-2.5 py-1 text-xs rounded-md transition-colors cursor-pointer",
+              activeDays === p.days
+                ? "bg-red-600 text-white"
+                : "text-foreground/70 hover:bg-white hover:text-foreground"
+            )}
           >
             {p.label}
           </button>

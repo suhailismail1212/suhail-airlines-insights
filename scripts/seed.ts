@@ -21,6 +21,23 @@ const WEEKDAY_MULTIPLIER = [1.1, 1.0, 1.0, 1.0, 1.0, 1.15, 1.25]; // Sun..Sat
 
 const BRANCH_BASE_WEIGHT: Record<string, number> = { duty_free: 3, food_court: 3, vip_lounge: 1.2 };
 
+const GENDERS: { value: string; weight: number }[] = [
+  { value: "female", weight: 1.02 },
+  { value: "male", weight: 1 },
+];
+
+// Adult-travel-weighted age distribution: light on teens/seniors, heavy 20s-40s.
+const AGE_BANDS: { value: string; weight: number }[] = [
+  { value: "10s", weight: 1 },
+  { value: "20s", weight: 20 },
+  { value: "30s", weight: 34 },
+  { value: "40s", weight: 24 },
+  { value: "50s", weight: 13 },
+  { value: "60s", weight: 5 },
+  { value: "70s", weight: 1.8 },
+  { value: "80s", weight: 0.4 },
+];
+
 interface Anomaly {
   daysAgo: number;
   zoneKey: string;
@@ -164,6 +181,7 @@ function main() {
   const rng = createRng(SEED);
   const visitorPool: string[] = [];
   const visitorFirstSeen = new Map<string, string>();
+  const visitorDemographics = new Map<string, { gender: string; ageBand: string }>();
 
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
@@ -187,14 +205,21 @@ function main() {
       const poolSizeBefore = visitorPool.length;
       const { visit, zoneVisits } = buildVisit(rng, dateStr, zoneIdByKey, visitorPool, anomaly);
       if (visitorPool.length > poolSizeBefore) {
-        visitorFirstSeen.set(visitorPool[visitorPool.length - 1], dateStr);
+        const newVisitorId = visitorPool[visitorPool.length - 1];
+        visitorFirstSeen.set(newVisitorId, dateStr);
+        visitorDemographics.set(newVisitorId, {
+          gender: weightedPick(rng, GENDERS),
+          ageBand: weightedPick(rng, AGE_BANDS),
+        });
       }
       allVisits.push(visit);
       allZoneVisitLists.push(zoneVisits);
     }
   }
 
-  const insertVisitor = db.prepare("INSERT OR IGNORE INTO visitors (id, first_seen) VALUES (?, ?)");
+  const insertVisitor = db.prepare(
+    "INSERT OR IGNORE INTO visitors (id, first_seen, gender, age_band) VALUES (?, ?, ?, ?)"
+  );
   const insertVisit = db.prepare(`
     INSERT INTO visits (visitor_id, date, start_time, end_time, total_duration_minutes, flow, entry_zone_id, exit_zone_id, primary_zone_id, happiness_score)
     VALUES (@visitor_id, @date, @start_time, @end_time, @total_duration_minutes, @flow, @entry_zone_id, @exit_zone_id, @primary_zone_id, @happiness_score)
@@ -205,7 +230,10 @@ function main() {
   `);
 
   const insertAll = db.transaction(() => {
-    for (const [id, firstSeen] of visitorFirstSeen) insertVisitor.run(id, firstSeen);
+    for (const [id, firstSeen] of visitorFirstSeen) {
+      const demo = visitorDemographics.get(id)!;
+      insertVisitor.run(id, firstSeen, demo.gender, demo.ageBand);
+    }
     for (let i = 0; i < allVisits.length; i++) {
       const info = insertVisit.run(allVisits[i]);
       const visitId = info.lastInsertRowid as number;

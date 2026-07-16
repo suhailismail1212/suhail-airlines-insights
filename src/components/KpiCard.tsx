@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { clsx } from "clsx";
 import type { LucideIcon } from "lucide-react";
 
@@ -6,14 +7,16 @@ export function KpiCard({
   value,
   icon: Icon,
   deltaPct,
+  href,
 }: {
   label: string;
   value: string;
   icon?: LucideIcon;
   deltaPct?: number | null;
+  href?: string;
 }) {
-  return (
-    <div className="bg-surface-muted rounded-xl p-4">
+  const content = (
+    <>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-foreground/50">{label}</span>
         {Icon && <Icon className="w-4 h-4 text-foreground/30" strokeWidth={1.75} />}
@@ -32,6 +35,19 @@ export function KpiCard({
           </span>
         )}
       </div>
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="block bg-surface-muted rounded-xl p-4 hover:bg-surface hover:ring-1 hover:ring-red-500 transition-colors"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="bg-surface-muted rounded-xl p-4">{content}</div>;
 }

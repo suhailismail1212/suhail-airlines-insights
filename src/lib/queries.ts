@@ -183,14 +183,33 @@ export interface SankeyLink {
   value: number;
 }
 
+export type TimeOfDay = "all" | "morning" | "afternoon" | "evening";
+
+/** Morning/afternoon are contiguous; evening wraps past midnight to cover
+ * red-eye departures that belong to the previous evening's rhythm. */
+function timeOfDaySql(tod: TimeOfDay, column: string): string {
+  switch (tod) {
+    case "morning":
+      return `AND CAST(strftime('%H', ${column}) AS INTEGER) BETWEEN 5 AND 11`;
+    case "afternoon":
+      return `AND CAST(strftime('%H', ${column}) AS INTEGER) BETWEEN 12 AND 17`;
+    case "evening":
+      return `AND (CAST(strftime('%H', ${column}) AS INTEGER) >= 18 OR CAST(strftime('%H', ${column}) AS INTEGER) <= 4)`;
+    default:
+      return "";
+  }
+}
+
 /** Builds an Entry -> zones -> Exit flow graph from visit entry/exit zones
  * plus consecutive zone-to-zone transitions within each visit. */
-export function getJourneyFlows(range: DateRange): SankeyLink[] {
+export function getJourneyFlows(range: DateRange, tod: TimeOfDay = "all"): SankeyLink[] {
+  const todFilter = timeOfDaySql(tod, "v.start_time");
+
   const entries = db()
     .prepare(
       `SELECT z.name as zoneName, COUNT(*) as count
        FROM visits v JOIN zones z ON z.id = v.entry_zone_id
-       WHERE v.date BETWEEN ? AND ? GROUP BY z.id`
+       WHERE v.date BETWEEN ? AND ? ${todFilter} GROUP BY z.id`
     )
     .all(range.start, range.end) as { zoneName: string; count: number }[];
 
@@ -198,7 +217,7 @@ export function getJourneyFlows(range: DateRange): SankeyLink[] {
     .prepare(
       `SELECT z.name as zoneName, COUNT(*) as count
        FROM visits v JOIN zones z ON z.id = v.exit_zone_id
-       WHERE v.date BETWEEN ? AND ? GROUP BY z.id`
+       WHERE v.date BETWEEN ? AND ? ${todFilter} GROUP BY z.id`
     )
     .all(range.start, range.end) as { zoneName: string; count: number }[];
 
@@ -210,7 +229,7 @@ export function getJourneyFlows(range: DateRange): SankeyLink[] {
        JOIN zones zFrom ON zFrom.id = zv1.zone_id
        JOIN zones zTo ON zTo.id = zv2.zone_id
        JOIN visits v ON v.id = zv1.visit_id
-       WHERE v.date BETWEEN ? AND ?
+       WHERE v.date BETWEEN ? AND ? ${todFilter}
        GROUP BY zFrom.id, zTo.id`
     )
     .all(range.start, range.end) as { fromZone: string; toZone: string; count: number }[];
@@ -278,16 +297,15 @@ export interface Alert {
 
 const ANOMALY_THRESHOLD = 0.2;
 const BASELINE_LOOKBACK_DAYS = 14;
+const RECENT_WINDOW_DAYS = 7;
 
-/** Flags a zone if its most recent day deviates >20% from its own trailing
- * 14-day baseline, for happiness (drops only) and traffic (either direction). */
+/** Flags a zone if any day in the last week deviates >20% from its own
+ * trailing 14-day baseline (as of that day) — happiness drops only, traffic
+ * either direction. Scans a window rather than just the single latest day,
+ * since a plausible incident (a bad shift, a spike) rarely lands on exactly
+ * "today"; keeps only the worst deviation per zone+metric. */
 export function getAnomalyAlerts(range: DateRange): Alert[] {
-  const latestDate = range.end;
-  const baselineStart = addDaysStr(latestDate, -BASELINE_LOOKBACK_DAYS);
-  const baselineEnd = addDaysStr(latestDate, -1);
-
   const zones = db().prepare("SELECT id, name FROM zones ORDER BY id").all() as { id: number; name: string }[];
-  const alerts: Alert[] = [];
 
   const happinessStmt = db().prepare(
     `SELECT AVG(zv.happiness_score) as avgHappiness
@@ -310,53 +328,71 @@ export function getAnomalyAlerts(range: DateRange): Alert[] {
      WHERE zv.zone_id = ? AND v.date BETWEEN ? AND ?`
   );
 
-  for (const zone of zones) {
-    const latestHappiness = (happinessStmt.get(zone.id, latestDate) as { avgHappiness: number | null }).avgHappiness;
-    const baselineHappiness = (
-      happinessBaselineStmt.get(zone.id, baselineStart, baselineEnd) as { avgHappiness: number | null }
-    ).avgHappiness;
+  const bestByKey = new Map<string, Alert>();
 
-    if (latestHappiness != null && baselineHappiness) {
-      const deviation = (latestHappiness - baselineHappiness) / baselineHappiness;
-      if (deviation <= -ANOMALY_THRESHOLD) {
-        alerts.push({
-          zoneId: zone.id,
-          zoneName: zone.name,
-          metric: "happiness",
-          direction: "drop",
-          deviationPct: deviation * 100,
-          latestValue: latestHappiness,
-          baselineValue: baselineHappiness,
-          date: latestDate,
-        });
-      }
+  function considerAlert(key: string, candidate: Alert) {
+    const existing = bestByKey.get(key);
+    if (!existing || Math.abs(candidate.deviationPct) > Math.abs(existing.deviationPct)) {
+      bestByKey.set(key, candidate);
     }
+  }
 
-    const latestTraffic = (trafficStmt.get(zone.id, latestDate) as { entries: number }).entries;
-    const baselineTraffic = trafficBaselineStmt.get(zone.id, baselineStart, baselineEnd) as {
-      entries: number;
-      days: number;
-    };
-    const baselinePerDay = baselineTraffic.days > 0 ? baselineTraffic.entries / baselineTraffic.days : 0;
+  for (let i = 0; i < RECENT_WINDOW_DAYS; i++) {
+    const checkDate = addDaysStr(range.end, -i);
+    if (checkDate < range.start) break;
 
-    if (baselinePerDay > 0) {
-      const deviation = (latestTraffic - baselinePerDay) / baselinePerDay;
-      if (Math.abs(deviation) >= ANOMALY_THRESHOLD) {
-        alerts.push({
-          zoneId: zone.id,
-          zoneName: zone.name,
-          metric: "traffic",
-          direction: deviation < 0 ? "drop" : "spike",
-          deviationPct: deviation * 100,
-          latestValue: latestTraffic,
-          baselineValue: baselinePerDay,
-          date: latestDate,
-        });
+    const baselineStart = addDaysStr(checkDate, -BASELINE_LOOKBACK_DAYS);
+    const baselineEnd = addDaysStr(checkDate, -1);
+
+    for (const zone of zones) {
+      const latestHappiness = (happinessStmt.get(zone.id, checkDate) as { avgHappiness: number | null })
+        .avgHappiness;
+      const baselineHappiness = (
+        happinessBaselineStmt.get(zone.id, baselineStart, baselineEnd) as { avgHappiness: number | null }
+      ).avgHappiness;
+
+      if (latestHappiness != null && baselineHappiness) {
+        const deviation = (latestHappiness - baselineHappiness) / baselineHappiness;
+        if (deviation <= -ANOMALY_THRESHOLD) {
+          considerAlert(`${zone.id}-happiness`, {
+            zoneId: zone.id,
+            zoneName: zone.name,
+            metric: "happiness",
+            direction: "drop",
+            deviationPct: deviation * 100,
+            latestValue: latestHappiness,
+            baselineValue: baselineHappiness,
+            date: checkDate,
+          });
+        }
+      }
+
+      const latestTraffic = (trafficStmt.get(zone.id, checkDate) as { entries: number }).entries;
+      const baselineTraffic = trafficBaselineStmt.get(zone.id, baselineStart, baselineEnd) as {
+        entries: number;
+        days: number;
+      };
+      const baselinePerDay = baselineTraffic.days > 0 ? baselineTraffic.entries / baselineTraffic.days : 0;
+
+      if (baselinePerDay > 0) {
+        const deviation = (latestTraffic - baselinePerDay) / baselinePerDay;
+        if (Math.abs(deviation) >= ANOMALY_THRESHOLD) {
+          considerAlert(`${zone.id}-traffic`, {
+            zoneId: zone.id,
+            zoneName: zone.name,
+            metric: "traffic",
+            direction: deviation < 0 ? "drop" : "spike",
+            deviationPct: deviation * 100,
+            latestValue: latestTraffic,
+            baselineValue: baselinePerDay,
+            date: checkDate,
+          });
+        }
       }
     }
   }
 
-  return alerts.sort((a, b) => Math.abs(b.deviationPct) - Math.abs(a.deviationPct));
+  return Array.from(bestByKey.values()).sort((a, b) => Math.abs(b.deviationPct) - Math.abs(a.deviationPct));
 }
 
 export interface ForecastDay {
@@ -425,4 +461,166 @@ export function listZones(): { id: number; name: string; category: string }[] {
     name: string;
     category: string;
   }[];
+}
+
+export interface GenderBreakdownRow {
+  gender: string;
+  count: number;
+  percent: number;
+}
+
+export function getGenderBreakdown(range: DateRange): GenderBreakdownRow[] {
+  const rows = db()
+    .prepare(
+      `SELECT vi.gender as gender, COUNT(DISTINCT vi.id) as count
+       FROM visitors vi JOIN visits v ON v.visitor_id = vi.id
+       WHERE v.date BETWEEN ? AND ?
+       GROUP BY vi.gender`
+    )
+    .all(range.start, range.end) as { gender: string; count: number }[];
+  const total = rows.reduce((s, r) => s + r.count, 0) || 1;
+  return rows.map((r) => ({ ...r, percent: (r.count / total) * 100 }));
+}
+
+const AGE_BAND_ORDER = ["10s", "20s", "30s", "40s", "50s", "60s", "70s", "80s"];
+
+export interface AgeBreakdownRow {
+  ageBand: string;
+  count: number;
+  percent: number;
+}
+
+export function getAgeBreakdown(range: DateRange): AgeBreakdownRow[] {
+  const rows = db()
+    .prepare(
+      `SELECT vi.age_band as ageBand, COUNT(DISTINCT vi.id) as count
+       FROM visitors vi JOIN visits v ON v.visitor_id = vi.id
+       WHERE v.date BETWEEN ? AND ?
+       GROUP BY vi.age_band`
+    )
+    .all(range.start, range.end) as { ageBand: string; count: number }[];
+  const total = rows.reduce((s, r) => s + r.count, 0) || 1;
+  const byBand = new Map(rows.map((r) => [r.ageBand, r.count]));
+  return AGE_BAND_ORDER.filter((band) => byBand.has(band)).map((band) => ({
+    ageBand: band,
+    count: byBand.get(band)!,
+    percent: (byBand.get(band)! / total) * 100,
+  }));
+}
+
+export interface DayHourCell {
+  dow: number;
+  hour: number;
+  visits: number;
+  avgHappiness: number | null;
+}
+
+const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+export { DOW_LABELS };
+
+/** day-of-week x hour-of-day grid, zero-filled, for the weekly rhythm heatmaps. */
+export function getDayHourHeatmap(range: DateRange): DayHourCell[] {
+  const rows = db()
+    .prepare(
+      `SELECT CAST(strftime('%w', date) AS INTEGER) as dow, CAST(strftime('%H', start_time) AS INTEGER) as hour,
+              COUNT(*) as visits, AVG(happiness_score) as avgHappiness
+       FROM visits WHERE date BETWEEN ? AND ?
+       GROUP BY dow, hour`
+    )
+    .all(range.start, range.end) as DayHourCell[];
+
+  const byKey = new Map(rows.map((r) => [`${r.dow}-${r.hour}`, r]));
+  const grid: DayHourCell[] = [];
+  for (let dow = 0; dow < 7; dow++) {
+    for (let hour = 0; hour < 24; hour++) {
+      const found = byKey.get(`${dow}-${hour}`);
+      grid.push(found ?? { dow, hour, visits: 0, avgHappiness: null });
+    }
+  }
+  return grid;
+}
+
+export interface WaitTimePoint {
+  hour: number;
+  avgWaitMinutes: number;
+}
+
+/** Avg time spent in transition zones (security/immigration) by hour, as a wait-time proxy. */
+export function getWaitTimeByHour(range: DateRange): WaitTimePoint[] {
+  const rows = db()
+    .prepare(
+      `SELECT CAST(strftime('%H', zv.enter_time) AS INTEGER) as hour, AVG(zv.duration_minutes) as avgWaitMinutes
+       FROM zone_visits zv
+       JOIN zones z ON z.id = zv.zone_id
+       JOIN visits v ON v.id = zv.visit_id
+       WHERE v.date BETWEEN ? AND ? AND z.category = 'transition'
+       GROUP BY hour ORDER BY hour`
+    )
+    .all(range.start, range.end) as WaitTimePoint[];
+  const byHour = new Map(rows.map((r) => [r.hour, r.avgWaitMinutes]));
+  return Array.from({ length: 24 }, (_, hour) => ({ hour, avgWaitMinutes: byHour.get(hour) ?? 0 }));
+}
+
+export interface JourneyStats {
+  avgZonesPerJourney: number;
+  avgTotalDwellMinutes: number;
+  departureSharePct: number;
+  longJourneySharePct: number;
+}
+
+const LONG_JOURNEY_THRESHOLD_MINUTES = 120;
+
+export function getJourneyStats(range: DateRange, tod: TimeOfDay = "all"): JourneyStats {
+  const todFilter = timeOfDaySql(tod, "start_time");
+  const visitStats = db()
+    .prepare(
+      `SELECT COUNT(*) as totalVisits, AVG(total_duration_minutes) as avgDwell,
+              SUM(CASE WHEN flow = 'departure' THEN 1 ELSE 0 END) as departureCount,
+              SUM(CASE WHEN total_duration_minutes >= ? THEN 1 ELSE 0 END) as longCount
+       FROM visits WHERE date BETWEEN ? AND ? ${todFilter}`
+    )
+    .get(LONG_JOURNEY_THRESHOLD_MINUTES, range.start, range.end) as {
+    totalVisits: number;
+    avgDwell: number | null;
+    departureCount: number;
+    longCount: number;
+  };
+
+  const zoneCountStats = db()
+    .prepare(
+      `SELECT AVG(cnt) as avgZones FROM (
+         SELECT zv.visit_id, COUNT(*) as cnt FROM zone_visits zv
+         JOIN visits v ON v.id = zv.visit_id
+         WHERE v.date BETWEEN ? AND ? ${timeOfDaySql(tod, "v.start_time")} GROUP BY zv.visit_id
+       )`
+    )
+    .get(range.start, range.end) as { avgZones: number | null };
+
+  const total = visitStats.totalVisits || 1;
+  return {
+    avgZonesPerJourney: zoneCountStats.avgZones ?? 0,
+    avgTotalDwellMinutes: visitStats.avgDwell ?? 0,
+    departureSharePct: (visitStats.departureCount / total) * 100,
+    longJourneySharePct: (visitStats.longCount / total) * 100,
+  };
+}
+
+export interface ZoneTimeSeriesPoint {
+  date: string;
+  zoneName: string;
+  entries: number;
+}
+
+export function getZoneTimeSeries(range: DateRange, includeWeekends: boolean): ZoneTimeSeriesPoint[] {
+  const weekendFilter = includeWeekends ? "" : "AND CAST(strftime('%w', v.date) AS INTEGER) NOT IN (0, 6)";
+  return db()
+    .prepare(
+      `SELECT v.date as date, z.name as zoneName, COUNT(*) as entries
+       FROM zone_visits zv
+       JOIN visits v ON v.id = zv.visit_id
+       JOIN zones z ON z.id = zv.zone_id
+       WHERE v.date BETWEEN ? AND ? ${weekendFilter}
+       GROUP BY v.date, z.id ORDER BY v.date`
+    )
+    .all(range.start, range.end) as ZoneTimeSeriesPoint[];
 }
