@@ -30,7 +30,7 @@ export function TimeOfDayFilter({ value }: { value: string }) {
           type="button"
           onClick={() => select(opt.value)}
           className={clsx(
-            "px-2.5 py-1 text-xs rounded-md transition-colors cursor-pointer",
+            "px-2.5 py-1 text-xs rounded-md transition-colors active:opacity-70 cursor-pointer",
             value === opt.value ? "bg-red-600 text-white" : "text-foreground/70 hover:bg-white hover:text-foreground"
           )}
         >

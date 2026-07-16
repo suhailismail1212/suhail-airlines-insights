@@ -20,7 +20,7 @@ export function CompareToggle({ enabled }: { enabled: boolean }) {
       type="button"
       onClick={toggle}
       className={clsx(
-        "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer",
+        "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors active:opacity-70 cursor-pointer",
         enabled ? "bg-red-600 text-white border-red-600" : "bg-surface text-foreground/70 border-border hover:border-red-500"
       )}
     >

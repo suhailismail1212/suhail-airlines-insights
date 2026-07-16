@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { LogOut } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { Sidebar } from "@/components/Sidebar";
+import { PageTransition } from "@/components/PageTransition";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -22,14 +23,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
           >
             <button
               type="submit"
-              className="flex items-center gap-1.5 text-sm text-foreground/60 hover:text-red-600 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-sm text-foreground/60 hover:text-red-600 active:opacity-70 transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
               Sign out
             </button>
           </form>
         </header>
-        <main className="flex-1 px-8 py-6 max-w-[1400px] w-full mx-auto">{children}</main>
+        <main className="flex-1 px-8 py-6 max-w-[1400px] w-full mx-auto">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </div>
   );

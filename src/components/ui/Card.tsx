@@ -2,7 +2,14 @@ import { clsx } from "clsx";
 
 export function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={clsx("bg-surface border border-border rounded-xl p-5", className)}>{children}</div>
+    <div
+      className={clsx(
+        "bg-surface border border-border rounded-xl p-5 transition-shadow duration-200 ease-out hover:shadow-sm",
+        className
+      )}
+    >
+      {children}
+    </div>
   );
 }
 

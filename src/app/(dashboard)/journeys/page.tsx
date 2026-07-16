@@ -39,12 +39,23 @@ export default async function JourneysPage({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <KpiCard label="Avg zones / journey" value={stats.avgZonesPerJourney.toFixed(1)} icon={Layers} />
-        <KpiCard label="Avg total dwell" value={`${Math.round(stats.avgTotalDwellMinutes)} min`} icon={Clock3} />
-        <KpiCard label="Departure flow share" value={`${stats.departureSharePct.toFixed(0)}%`} icon={PlaneTakeoff} />
+        <KpiCard label="Avg zones / journey" value={stats.avgZonesPerJourney} format={{ decimals: 1 }} icon={Layers} />
+        <KpiCard
+          label="Avg total dwell"
+          value={stats.avgTotalDwellMinutes}
+          format={{ suffix: " min" }}
+          icon={Clock3}
+        />
+        <KpiCard
+          label="Departure flow share"
+          value={stats.departureSharePct}
+          format={{ suffix: "%" }}
+          icon={PlaneTakeoff}
+        />
         <KpiCard
           label="Exceed 120-min dwell"
-          value={`${stats.longJourneySharePct.toFixed(1)}%`}
+          value={stats.longJourneySharePct}
+          format={{ decimals: 1, suffix: "%" }}
           icon={AlertTriangle}
           href={`/at-risk?${rangeQuery}`}
         />

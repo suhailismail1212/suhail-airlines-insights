@@ -81,7 +81,7 @@ export function AtRiskTable({ rows }: { rows: AtRiskVisitor[] }) {
             type="button"
             onClick={() => selectFilter(opt.value)}
             className={clsx(
-              "px-2.5 py-1 text-xs rounded-md transition-colors cursor-pointer border",
+              "px-2.5 py-1 text-xs rounded-md transition-colors active:opacity-70 cursor-pointer border",
               filter === opt.value
                 ? "bg-red-600 text-white border-red-600"
                 : "bg-surface text-foreground/70 border-border hover:border-red-500"
@@ -162,7 +162,7 @@ export function AtRiskTable({ rows }: { rows: AtRiskVisitor[] }) {
               type="button"
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={clampedPage === 0}
-              className="p-1.5 rounded-md border border-border hover:border-red-500 disabled:opacity-30 disabled:hover:border-border transition-colors cursor-pointer disabled:cursor-default"
+              className="p-1.5 rounded-md border border-border hover:border-red-500 active:opacity-70 disabled:opacity-30 disabled:hover:border-border transition-colors cursor-pointer disabled:cursor-default"
               aria-label="Previous page"
             >
               <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -174,7 +174,7 @@ export function AtRiskTable({ rows }: { rows: AtRiskVisitor[] }) {
               type="button"
               onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
               disabled={clampedPage >= pageCount - 1}
-              className="p-1.5 rounded-md border border-border hover:border-red-500 disabled:opacity-30 disabled:hover:border-border transition-colors cursor-pointer disabled:cursor-default"
+              className="p-1.5 rounded-md border border-border hover:border-red-500 active:opacity-70 disabled:opacity-30 disabled:hover:border-border transition-colors cursor-pointer disabled:cursor-default"
               aria-label="Next page"
             >
               <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />

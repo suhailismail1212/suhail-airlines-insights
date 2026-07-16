@@ -29,6 +29,8 @@ export function HappinessTrendChart({ data }: { data: { date: string; avgHappine
           strokeWidth={2}
           dot={false}
           activeDot={{ r: 4 }}
+          animationDuration={600}
+          animationEasing="ease-out"
         />
       </LineChart>
     </ResponsiveContainer>

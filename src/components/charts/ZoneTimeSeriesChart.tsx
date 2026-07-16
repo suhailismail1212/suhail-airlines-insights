@@ -24,7 +24,14 @@ export function ZoneTimeSeriesChart({
         <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} axisLine={false} tickLine={false} width={32} />
         <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--color-border)" }} />
         {zoneNames.map((name, i) => (
-          <Bar key={name} dataKey={name} stackId="zones" fill={ZONE_COLOR_CYCLE[i % ZONE_COLOR_CYCLE.length]} />
+          <Bar
+            key={name}
+            dataKey={name}
+            stackId="zones"
+            fill={ZONE_COLOR_CYCLE[i % ZONE_COLOR_CYCLE.length]}
+            animationDuration={600}
+            animationEasing="ease-out"
+          />
         ))}
       </BarChart>
     </ResponsiveContainer>

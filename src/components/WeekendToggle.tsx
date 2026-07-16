@@ -16,7 +16,11 @@ export function WeekendToggle({ enabled }: { enabled: boolean }) {
   }
 
   return (
-    <button type="button" onClick={toggle} className="flex items-center gap-2 text-xs text-foreground/70 cursor-pointer">
+    <button
+      type="button"
+      onClick={toggle}
+      className="flex items-center gap-2 text-xs text-foreground/70 active:opacity-70 transition-opacity cursor-pointer"
+    >
       Show weekends
       <span
         className={clsx(

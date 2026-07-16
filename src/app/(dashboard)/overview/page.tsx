@@ -81,26 +81,37 @@ export default async function OverviewPage({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <KpiCard
           label="Total visits"
-          value={kpi.totalVisits.toLocaleString()}
+          value={kpi.totalVisits}
           icon={PlaneTakeoff}
           deltaPct={comparison?.deltaPct.totalVisits}
           href={`/zones?${rangeQuery}`}
         />
         <KpiCard
           label="Unique visitors"
-          value={kpi.uniqueVisitors.toLocaleString()}
+          value={kpi.uniqueVisitors}
           icon={Users}
           deltaPct={comparison?.deltaPct.uniqueVisitors}
           href={`/at-risk?${rangeQuery}`}
         />
         <KpiCard
           label="Avg happiness"
-          value={`${kpi.avgHappiness.toFixed(1)} / 10`}
+          value={kpi.avgHappiness}
+          format={{ decimals: 1, suffix: " / 10" }}
           icon={Smile}
           deltaPct={comparison?.deltaPct.avgHappiness}
           href={`/visits-happiness?${rangeQuery}`}
         />
-        <KpiCard label="Peak hour" value={peakHourLabel} icon={Clock} href={`/zones?${rangeQuery}`} />
+        {kpi.peakHour != null ? (
+          <KpiCard
+            label="Peak hour"
+            value={kpi.peakHour}
+            format={{ suffix: ":00" }}
+            icon={Clock}
+            href={`/zones?${rangeQuery}`}
+          />
+        ) : (
+          <KpiCard label="Peak hour" value="—" icon={Clock} href={`/zones?${rangeQuery}`} />
+        )}
       </div>
 
       {busiest && happiest && needsAttention && (

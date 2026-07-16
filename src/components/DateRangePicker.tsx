@@ -40,7 +40,7 @@ export function DateRangePicker({ start, end, maxDate }: { start: string; end: s
             type="button"
             onClick={() => applyPreset(p.days)}
             className={clsx(
-              "px-2.5 py-1 text-xs rounded-md transition-colors cursor-pointer",
+              "px-2.5 py-1 text-xs rounded-md transition-colors active:opacity-70 cursor-pointer",
               activeDays === p.days
                 ? "bg-red-600 text-white"
                 : "text-foreground/70 hover:bg-white hover:text-foreground"

@@ -1,5 +1,6 @@
 import type { ForecastDay } from "@/lib/queries";
 import { formatDisplayDate } from "@/lib/dates";
+import { GrowBar } from "./GrowBar";
 
 export function ForecastPanel({ days }: { days: ForecastDay[] }) {
   const max = Math.max(...days.map((d) => d.predictedVisits), 1);
@@ -13,10 +14,7 @@ export function ForecastPanel({ days }: { days: ForecastDay[] }) {
             <p className="text-[11px] text-foreground/40">{formatDisplayDate(d.date)}</p>
           </div>
           <div className="flex-1 h-2 rounded-full bg-surface-muted overflow-hidden">
-            <div
-              className="h-full bg-chart-gold rounded-full"
-              style={{ width: `${(d.predictedVisits / max) * 100}%` }}
-            />
+            <GrowBar widthPercent={(d.predictedVisits / max) * 100} className="bg-chart-gold" />
           </div>
           <span className="text-sm board-numerals w-10 text-right">{d.predictedVisits}</span>
           {d.peakHour != null && (

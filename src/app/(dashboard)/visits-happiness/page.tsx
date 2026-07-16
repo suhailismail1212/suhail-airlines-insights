@@ -37,8 +37,8 @@ export default async function VisitsHappinessPage({
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <KpiCard label="Total visits" value={kpi.totalVisits.toLocaleString()} icon={Smile} />
-        <KpiCard label="Avg happiness" value={`${kpi.avgHappiness.toFixed(1)} / 10`} />
+        <KpiCard label="Total visits" value={kpi.totalVisits} icon={Smile} />
+        <KpiCard label="Avg happiness" value={kpi.avgHappiness} format={{ decimals: 1, suffix: " / 10" }} />
         <KpiCard label="Happiest zone" value={best ? best.name : "—"} />
         <KpiCard label="Lowest scoring zone" value={worst ? worst.name : "—"} />
       </div>

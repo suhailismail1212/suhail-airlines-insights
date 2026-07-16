@@ -36,6 +36,8 @@ export function ZoneBarChart({ data }: { data: { name: string; visits: number }[
           barSize={16}
           onClick={goToZoneAnalytics}
           cursor="pointer"
+          animationDuration={600}
+          animationEasing="ease-out"
         />
       </BarChart>
     </ResponsiveContainer>

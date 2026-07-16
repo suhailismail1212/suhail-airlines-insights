@@ -34,6 +34,8 @@ export function WaitTimeChart({ data }: { data: { hour: number; avgWaitMinutes: 
           strokeWidth={2}
           dot={false}
           activeDot={{ r: 4 }}
+          animationDuration={600}
+          animationEasing="ease-out"
         />
       </LineChart>
     </ResponsiveContainer>

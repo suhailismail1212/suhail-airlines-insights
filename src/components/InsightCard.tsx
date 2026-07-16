@@ -21,7 +21,7 @@ export function InsightCard({
   return (
     <Link
       href={href}
-      className="block bg-surface border border-border rounded-xl p-5 hover:border-red-500 transition-colors"
+      className="block bg-surface border border-border rounded-xl p-5 transition-[border-color,box-shadow] duration-200 ease-out hover:border-red-500 hover:shadow-sm"
     >
       <div className="flex items-center justify-between mb-3">
         <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-foreground/50">

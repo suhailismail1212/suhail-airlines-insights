@@ -8,6 +8,7 @@ import { ZoneHeatmap } from "@/components/ZoneHeatmap";
 import { ZoneTreemap } from "@/components/charts/ZoneTreemap";
 import { ZoneTimeSeriesChart } from "@/components/charts/ZoneTimeSeriesChart";
 import { WeekendToggle } from "@/components/WeekendToggle";
+import { GrowBar } from "@/components/GrowBar";
 
 export default async function ZonesPage({
   searchParams,
@@ -88,10 +89,7 @@ export default async function ZonesPage({
             <div key={z.id} className="flex items-center gap-3">
               <span className="w-36 shrink-0 text-sm text-foreground/70 truncate">{z.name}</span>
               <div className="flex-1 h-2 rounded-full bg-surface-muted overflow-hidden">
-                <div
-                  className="h-full bg-chart-red rounded-full"
-                  style={{ width: `${(z.entries / maxEntries) * 100}%` }}
-                />
+                <GrowBar widthPercent={(z.entries / maxEntries) * 100} className="bg-chart-red" />
               </div>
               <span className="w-16 text-right text-sm board-numerals">{z.entries.toLocaleString()}</span>
               <span className="w-20 text-right text-xs text-foreground/50">{z.avgHappiness.toFixed(1)} mood</span>

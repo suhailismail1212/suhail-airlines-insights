@@ -71,17 +71,17 @@ export function ExportButton({ data }: { data: ReportData }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-surface hover:border-red-500 transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-surface hover:border-red-500 active:opacity-70 transition-colors cursor-pointer"
       >
         <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
         Export
       </button>
       {open && (
         <div className="absolute right-0 mt-1 bg-surface border border-border rounded-lg shadow-lg overflow-hidden z-10 w-32">
-          <button type="button" onClick={downloadCsv} className="block w-full text-left px-3 py-2 text-xs hover:bg-surface-muted cursor-pointer">
+          <button type="button" onClick={downloadCsv} className="block w-full text-left px-3 py-2 text-xs hover:bg-surface-muted active:opacity-70 transition-colors cursor-pointer">
             Export CSV
           </button>
-          <button type="button" onClick={downloadPdf} className="block w-full text-left px-3 py-2 text-xs hover:bg-surface-muted cursor-pointer">
+          <button type="button" onClick={downloadPdf} className="block w-full text-left px-3 py-2 text-xs hover:bg-surface-muted active:opacity-70 transition-colors cursor-pointer">
             Export PDF
           </button>
         </div>

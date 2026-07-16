@@ -30,8 +30,8 @@ export default async function AtRiskPage({
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        <KpiCard label="Flagged passengers" value={atRisk.length.toLocaleString()} icon={AlertTriangle} />
-        <KpiCard label="Share of visitors" value={`${sharePct.toFixed(1)}%`} />
+        <KpiCard label="Flagged passengers" value={atRisk.length} icon={AlertTriangle} />
+        <KpiCard label="Share of visitors" value={sharePct} format={{ decimals: 1, suffix: "%" }} />
         <KpiCard label="Low mood threshold" value="≤ 4.5 / 10" />
       </div>
 
