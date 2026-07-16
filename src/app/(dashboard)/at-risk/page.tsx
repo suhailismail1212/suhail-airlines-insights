@@ -68,12 +68,12 @@ export default async function AtRiskPage({
                   <td className="py-2.5 pr-4">
                     <div className="flex items-center gap-2">
                       {v.lowHappinessFlag && (
-                        <span title="Low happiness" className="text-crimson-500">
+                        <span title="Low happiness" className="text-red-600">
                           <AlertTriangle className="w-4 h-4" strokeWidth={1.75} />
                         </span>
                       )}
                       {v.longDurationFlag && (
-                        <span title="Long total visit duration" className="text-chart-amber">
+                        <span title="Long total visit duration" className="text-chart-gold">
                           <Clock className="w-4 h-4" strokeWidth={1.75} />
                         </span>
                       )}

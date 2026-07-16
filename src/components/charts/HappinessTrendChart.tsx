@@ -25,7 +25,7 @@ export function HappinessTrendChart({ data }: { data: { date: string; avgHappine
         <Line
           type="monotone"
           dataKey="avgHappiness"
-          stroke="var(--color-chart-teal)"
+          stroke="var(--color-chart-sage)"
           strokeWidth={2}
           dot={false}
           activeDot={{ r: 4 }}

@@ -37,7 +37,7 @@ export default async function ZonesPage({
               <span className="w-36 shrink-0 text-sm text-foreground/70 truncate">{z.name}</span>
               <div className="flex-1 h-2 rounded-full bg-surface-muted overflow-hidden">
                 <div
-                  className="h-full bg-chart-coral rounded-full"
+                  className="h-full bg-chart-red rounded-full"
                   style={{ width: `${(z.entries / maxEntries) * 100}%` }}
                 />
               </div>

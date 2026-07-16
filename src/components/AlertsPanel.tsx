@@ -11,9 +11,9 @@ export function AlertsPanel({ alerts }: { alerts: Alert[] }) {
       {alerts.map((a) => (
         <li
           key={`${a.zoneId}-${a.metric}`}
-          className="flex items-start gap-2.5 p-3 rounded-lg bg-crimson-600/5 border border-crimson-600/20"
+          className="flex items-start gap-2.5 p-3 rounded-lg bg-red-600/5 border border-red-600/20"
         >
-          <AlertTriangle className="w-4 h-4 text-crimson-500 mt-0.5 shrink-0" strokeWidth={1.75} />
+          <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" strokeWidth={1.75} />
           <div className="text-sm">
             <p className="text-foreground">
               <span className="font-medium">{a.zoneName}</span>{" "}

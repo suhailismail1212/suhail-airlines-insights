@@ -27,7 +27,7 @@ function SankeyNode(props: unknown) {
   const isTerminal = payload.name === "Entry" || payload.name === "Exit";
   return (
     <Layer>
-      <rect x={x} y={y} width={width} height={height} fill={isTerminal ? "var(--color-navy-700)" : "var(--color-chart-coral)"} rx={2} />
+      <rect x={x} y={y} width={width} height={height} fill={isTerminal ? "var(--color-chart-olive)" : "var(--color-chart-red)"} rx={2} />
       <text
         x={x + width + 6}
         y={y + height / 2}
@@ -51,7 +51,7 @@ export function JourneySankeyChart({ links }: { links: SankeyLink[] }) {
         node={SankeyNode}
         nodeWidth={10}
         nodePadding={22}
-        link={{ stroke: "var(--color-chart-teal)", strokeOpacity: 0.25 }}
+        link={{ stroke: "var(--color-chart-sage)", strokeOpacity: 0.25 }}
         margin={{ left: 16, right: 90, top: 16, bottom: 16 }}
       >
         <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--color-border)" }} />

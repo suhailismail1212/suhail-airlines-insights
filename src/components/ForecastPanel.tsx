@@ -14,7 +14,7 @@ export function ForecastPanel({ days }: { days: ForecastDay[] }) {
           </div>
           <div className="flex-1 h-2 rounded-full bg-surface-muted overflow-hidden">
             <div
-              className="h-full bg-chart-blue rounded-full"
+              className="h-full bg-chart-gold rounded-full"
               style={{ width: `${(d.predictedVisits / max) * 100}%` }}
             />
           </div>

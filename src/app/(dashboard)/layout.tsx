@@ -8,7 +8,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-screen">
-      <Suspense fallback={<div className="w-60 shrink-0 bg-navy-950 min-h-screen" />}>
+      <Suspense fallback={<div className="w-60 shrink-0 bg-surface border-r border-border min-h-screen" />}>
         <Sidebar />
       </Suspense>
       <div className="flex-1 flex flex-col min-w-0">
@@ -22,7 +22,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           >
             <button
               type="submit"
-              className="flex items-center gap-1.5 text-sm text-foreground/60 hover:text-crimson-600 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-sm text-foreground/60 hover:text-red-600 transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
               Sign out

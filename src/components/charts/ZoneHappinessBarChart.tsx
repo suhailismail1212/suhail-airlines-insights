@@ -22,7 +22,7 @@ export function ZoneHappinessBarChart({ data }: { data: { name: string; avgHappi
           contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--color-border)" }}
           formatter={(value) => (typeof value === "number" ? value.toFixed(1) : String(value ?? ""))}
         />
-        <Bar dataKey="avgHappiness" fill="var(--color-chart-amber)" radius={[4, 4, 0, 0]} barSize={28} />
+        <Bar dataKey="avgHappiness" fill="var(--color-chart-gold)" radius={[4, 4, 0, 0]} barSize={28} />
       </BarChart>
     </ResponsiveContainer>
   );

@@ -21,7 +21,7 @@ export function CompareToggle({ enabled }: { enabled: boolean }) {
       onClick={toggle}
       className={clsx(
         "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer",
-        enabled ? "bg-navy-900 text-white border-navy-900" : "bg-surface text-foreground/70 border-border hover:border-navy-900"
+        enabled ? "bg-red-600 text-white border-red-600" : "bg-surface text-foreground/70 border-border hover:border-red-500"
       )}
     >
       Compare to previous period

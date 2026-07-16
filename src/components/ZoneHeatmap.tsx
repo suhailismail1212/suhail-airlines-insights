@@ -30,7 +30,7 @@ export function ZoneHeatmap({ cells }: { cells: HeatmapCell[] }) {
                     <div
                       className="w-6 h-5 rounded-sm"
                       style={{
-                        backgroundColor: `color-mix(in srgb, var(--color-chart-coral) ${Math.round(
+                        backgroundColor: `color-mix(in srgb, var(--color-chart-red) ${Math.round(
                           intensity * 90
                         )}%, var(--color-surface-muted))`,
                       }}

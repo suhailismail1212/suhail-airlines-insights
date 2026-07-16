@@ -24,7 +24,7 @@ export function KpiCard({
           <span
             className={clsx(
               "text-xs font-medium mb-0.5",
-              deltaPct > 0 ? "text-chart-green" : deltaPct < 0 ? "text-crimson-500" : "text-foreground/40"
+              deltaPct > 0 ? "text-chart-sage" : deltaPct < 0 ? "text-red-600" : "text-foreground/40"
             )}
           >
             {deltaPct > 0 ? "+" : ""}

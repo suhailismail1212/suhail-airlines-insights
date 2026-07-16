@@ -71,7 +71,7 @@ export function ExportButton({ data }: { data: ReportData }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-surface hover:border-navy-900 transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-surface hover:border-red-500 transition-colors cursor-pointer"
       >
         <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
         Export
