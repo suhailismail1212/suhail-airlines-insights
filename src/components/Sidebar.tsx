@@ -18,7 +18,7 @@ export function Sidebar() {
   const qs = searchParams.toString();
 
   return (
-    <nav className="w-60 shrink-0 bg-surface border-r border-border min-h-screen flex flex-col">
+    <nav className="w-60 shrink-0 bg-surface border-r border-border h-screen sticky top-0 flex flex-col overflow-y-auto">
       <div className="px-5 py-6 flex items-center gap-2 border-b border-border">
         <PlaneTakeoff className="w-5 h-5 text-red-600" strokeWidth={1.75} />
         <span className="text-red-600 font-medium text-sm tracking-wide">Suhail Airlines</span>

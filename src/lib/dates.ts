@@ -1,7 +1,9 @@
-import { addDays, differenceInCalendarDays, format, parseISO, subDays } from "date-fns";
+import { format, parseISO, subDays } from "date-fns";
 import { getDb } from "./db";
+import { type DateRange, getPreviousPeriod, addDaysStr, formatDisplayDate, dayOfWeekName } from "./dateUtils";
 
-export type DateRange = { start: string; end: string };
+export type { DateRange };
+export { getPreviousPeriod, addDaysStr, formatDisplayDate, dayOfWeekName };
 
 let cachedMaxDate: string | null = null;
 
@@ -23,23 +25,4 @@ export function getDefaultDateRange(): DateRange {
   const end = getDatasetMaxDate();
   const start = format(subDays(parseISO(end), 29), "yyyy-MM-dd");
   return { start, end };
-}
-
-export function getPreviousPeriod(range: DateRange): DateRange {
-  const lengthDays = differenceInCalendarDays(parseISO(range.end), parseISO(range.start)) + 1;
-  const prevEnd = format(subDays(parseISO(range.start), 1), "yyyy-MM-dd");
-  const prevStart = format(subDays(parseISO(prevEnd), lengthDays - 1), "yyyy-MM-dd");
-  return { start: prevStart, end: prevEnd };
-}
-
-export function addDaysStr(dateStr: string, days: number): string {
-  return format(addDays(parseISO(dateStr), days), "yyyy-MM-dd");
-}
-
-export function formatDisplayDate(dateStr: string): string {
-  return format(parseISO(dateStr), "d MMM yyyy");
-}
-
-export function dayOfWeekName(dateStr: string): string {
-  return format(parseISO(dateStr), "EEEE");
 }

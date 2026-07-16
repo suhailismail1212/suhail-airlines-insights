@@ -8,11 +8,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-screen">
-      <Suspense fallback={<div className="w-60 shrink-0 bg-surface border-r border-border min-h-screen" />}>
+      <Suspense fallback={<div className="w-60 shrink-0 bg-surface border-r border-border h-screen sticky top-0" />}>
         <Sidebar />
       </Suspense>
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-border bg-surface flex items-center justify-end px-6 gap-4 shrink-0">
+        <header className="h-14 border-b border-border bg-surface flex items-center justify-end px-6 gap-4 shrink-0 sticky top-0 z-10">
           <span className="text-sm text-foreground/60">{session?.user?.email}</span>
           <form
             action={async () => {
