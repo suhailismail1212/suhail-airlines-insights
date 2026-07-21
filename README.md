@@ -125,8 +125,10 @@ npm run dev
 ```
 
 Generate a real `AUTH_SECRET` with `npx auth secret` (or `openssl rand -base64 32`). The app
-seeds its mock database automatically on first `npm run dev`. Sign in with whatever you set
-`DASHBOARD_USERNAME` / `DASHBOARD_PASSWORD` to, then visit `http://localhost:3000`.
+seeds its mock database automatically on first `npm run dev`, then visit `http://localhost:3000`.
+
+**Demo login:** `manager` / `suhailair2026` (the defaults in `.env.example` — change them in
+`.env.local` if you want, there's no real user data behind this gate).
 
 ## Deploying
 
