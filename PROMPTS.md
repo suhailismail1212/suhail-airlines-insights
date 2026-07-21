@@ -1,31 +1,43 @@
 # Prompt History
 
-The prompts used to build Suhail Airlines Insights with Claude, in order. A couple of adjacent, closely related asks have been merged into a single entry for readability.
+The actual prompts used to build Suhail Airlines Insights with Claude, in order. A couple of closely related back to back asks are merged into one entry for readability.
 
-1. **Project brief.** Specified a standalone analytics dashboard demo built with Next.js, TypeScript, and Tailwind CSS, covering Overview, Visits & Happiness, Zone Analytics, Journeys, and Dissatisfied Visitors pages — plus four features beyond the reference tool's scope: anomaly/alert flags, period-over-period comparison, a forecast panel, and exportable reports. Specified a realistic mock data generator, a login flow, and a deploy-ready build.
+1. Build a standalone analytics dashboard demo using Next.js, TypeScript, and Tailwind CSS. Include Overview, Visits & Happiness, Zone Analytics, Journeys, and Dissatisfied Visitors pages, plus four features beyond the reference tool's scope: anomaly alerts, period over period comparison, a forecast panel, and exportable reports. Generate realistic mock data, add a login flow, and make it deploy ready.
 
-2. **Scope clarifications.** Chose to use my own name for branding rather than the client's, asked for a few theme directions to pick between, confirmed I had real zone data to seed the generator with, and specified deploy-ready only — no live deployment needed.
+2. I'll use my own name for the branding instead of the client's. Give me a few theme directions to choose from. I have real zone data to seed the generator with. It just needs to be deploy ready, I don't need it actually deployed anywhere.
 
-3. **Theme and branding.** Selected the "Bold data-viz colorful" theme direction, then renamed the project to "Suhail Airlines" with an airport-inspired visual theme in place of an early "Emirates" placeholder, to keep clear distance from the real client, and supplied real zone data for the generator.
+3. Make the theme "Bold data-viz colorful," the third option. Actually, scratch the Emirates name, call it Suhail Airlines and give it an airport themed look instead. Emirates is a client of Pulses.ai, this isn't getting published for them, it's just a project to show what I'm capable of. Here's the zone data as a screenshot, add more zones if it makes the dashboard better, it's flexible.
 
-4. **Depth pass, part 1.** Requested persistent active states on the date-range filters, hover-to-highlight behavior on the Journeys flow chart, more clickable drill-downs across the Overview page, and richer gender/age comparisons — pointed to a reference tool's screenshots for the level of depth expected, without asking for a literal copy. Held off starting until all reference material was shared.
+4. For the 7d, 30d, and 90d filters, make them show as visibly selected when clicked and keep that state. On the Journeys tab, when I hover over a path, highlight that path all the way to the next bar. On the Overview page, make more things clickable so people can drill into details, right now it's more visual than interactive. Add extra gender and age comparisons like the reference site I'm taking inspiration from, there's a lot more information there. I don't need a literal copy, but my dashboard looks small next to it in almost every way, so add more everywhere. Don't start yet, I still have more screenshots to send, just hold onto all of this until I give the green light.
 
-5. **Depth pass, go-ahead.** Shared the remaining reference screenshots and gave the green light to build: more hover interactions, deeper demographic breakdowns, and a general lift in the amount of insight surfaced across the app.
+5. Look at how everything on this reference site can be hovered over for extra detail, and how it breaks down by gender and age, it's just got way more insight into everything. I don't want a literal copy, I want my dashboard to make this one look outdated, but right now theirs still looks better. Add a lot more. Start now.
 
-6. **Run instructions.** Asked for setup and run instructions for the project.
+6. Give me instructions for running the website.
 
-7. **Bug fix and enhancement pass.** Flagged a bug from a screenshot, asked for a full regression pass to confirm there were no other bugs, and asked for a general enhancement pass since the app still felt basic.
+7. Here's a bug, from this screenshot. The site should have zero bugs, so do a full run through and fix anything else you find along with this one. Also give it a general enhancement pass, it still feels too basic.
 
-8. **Follow-up bug reports.** Flagged that the site failed to fully load as it previously had, and separately flagged a UI overlap bug (donut chart tooltip colliding with its center label).
+8. The website isn't opening fully the way it used to.
 
-9. **Motion and polish pass.** Requested a subtle motion pass across the app: number count-up animations, chart entrance animations, card hover states, page transitions, loading skeletons, and button press feedback — explicitly ruling out glassmorphism, gradients/glows, scroll-triggered reveals, and bouncy easing in favor of restraint.
+9. This is overlapping, see the screenshot.
 
-10. **Structural rebuild to match the reference tool.** Requested the dashboard be rebuilt page-by-page to match the reference tool's layout, structure, and chart types directly, reasoning that real client work means building within existing brand guidelines rather than a fresh design — while keeping the Suhail Airlines branding, the four custom features, and the existing motion/polish work intact, and executing to a higher visual standard than the reference. Asked for each page to be shown for confirmation before moving to the next. After the trademark/confidentiality tradeoff of this approach was flagged, confirmed the project was still headed for a public repo.
+10. Do a subtle motion and polish pass across the whole app: number count up animations, chart entrance animations, card hover states, page transitions, loading skeletons, and button press feedback. Avoid glassmorphism, gradients or glows, scroll triggered reveals, and bouncy easing. Keep it restrained.
 
-11. **Color correction.** Asked for the dashboard's headline numbers to be colored red to match the reference tool, then refined the request after the first pass landed on a shade that read as too brown rather than a true red.
+11. I need this dashboard to match an existing internal tool called Emirates Insights in layout, structure, and graph types, because in practice we build within a client's existing branding guidelines rather than designing a new visual identity from scratch. Keep my current logo as is, don't touch it. I've put reference screenshots in a reference folder, several per page. Go through each page and rebuild the layout, structure, chart types, spacing, and visual hierarchy to match, keeping my existing four extra features and the motion work integrated naturally, and executing it to a higher standard than the reference. Go page by page and show me each one before moving to the next so I can confirm it matches.
 
-12. **Feature parity fix.** Flagged that the red number styling had regressed to black in the browser, and requested a Visits/Happiness lens toggle on the Zone Analytics and Journeys pages to match the reference tool's pattern.
+12. Still headed for a public repo.
 
-13. **Final QA and documentation.** Requested a final bug sweep across the whole app, and asked for the full prompt history from this conversation to be compiled for the project repository.
+13. Make the numbers red like the ones in the screenshots.
 
-14. **Prompt log polish.** Requested this file's entries be rewritten for clarity and merged where naturally related, to present the prompting process cleanly.
+14. Make it this red, the one we have right now is too brownish.
+
+15. I see the numbers as just black now. Also, for Zone Analytics and Journeys, there should be a button to switch between Visits and Happiness like the reference pictures.
+
+16. Okay so the website is done, but do one final run through to make sure there are no bugs, and one last thing, can you tell me all the prompts I've used in this chat, because I need to commit it to GitHub, she wants all the prompts I used on this project in the repo.
+
+17. For every prompt I have, just change it to sound a bit better and join them if needed, because I want to show that I can efficiently use prompts and not just text back and forth.
+
+18. Commit it.
+
+19. Commit everything that's not committed yet.
+
+20. For the prompts, you didn't display it as actual prompts, and remove the double dashes and keep it humanized like I would do it, just make me sound a bit smarter.
