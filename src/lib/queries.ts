@@ -33,6 +33,28 @@ export function getKpiSummary(range: DateRange): KpiSummary {
   };
 }
 
+export interface NewRepeatVisitors {
+  total: number;
+  newCount: number;
+  repeatCount: number;
+}
+
+/** "New" = first-ever visit (visitors.first_seen) falls inside this range;
+ * "repeat" = the visitor was already seen before the range started. */
+export function getNewVsRepeatVisitors(range: DateRange): NewRepeatVisitors {
+  const row = db()
+    .prepare(
+      `SELECT
+         COUNT(DISTINCT CASE WHEN vi.first_seen >= ? THEN vi.id END) as newCount,
+         COUNT(DISTINCT CASE WHEN vi.first_seen < ? THEN vi.id END) as repeatCount
+       FROM visitors vi
+       JOIN visits v ON v.visitor_id = vi.id
+       WHERE v.date BETWEEN ? AND ?`
+    )
+    .get(range.start, range.start, range.start, range.end) as { newCount: number; repeatCount: number };
+  return { total: row.newCount + row.repeatCount, newCount: row.newCount, repeatCount: row.repeatCount };
+}
+
 export interface KpiComparison {
   current: KpiSummary;
   previous: KpiSummary;
@@ -114,13 +136,14 @@ export interface HeatmapCell {
   zoneName: string;
   hour: number;
   entries: number;
+  avgHappiness: number | null;
 }
 
 /** zone x hour-of-day grid, zero-filled, for the Zone Analytics heatmap. */
 export function getZoneHourHeatmap(range: DateRange): HeatmapCell[] {
   const rows = db()
     .prepare(
-      `SELECT z.id as zoneId, z.name as zoneName, CAST(strftime('%H', zv.enter_time) AS INTEGER) as hour, COUNT(*) as entries
+      `SELECT z.id as zoneId, z.name as zoneName, CAST(strftime('%H', zv.enter_time) AS INTEGER) as hour, COUNT(*) as entries, AVG(zv.happiness_score) as avgHappiness
        FROM zone_visits zv
        JOIN zones z ON z.id = zv.zone_id
        JOIN visits v ON v.id = zv.visit_id
@@ -129,14 +152,15 @@ export function getZoneHourHeatmap(range: DateRange): HeatmapCell[] {
     )
     .all(range.start, range.end) as HeatmapCell[];
 
-  const byKey = new Map<string, number>();
-  for (const r of rows) byKey.set(`${r.zoneId}-${r.hour}`, r.entries);
+  const byKey = new Map<string, { entries: number; avgHappiness: number | null }>();
+  for (const r of rows) byKey.set(`${r.zoneId}-${r.hour}`, { entries: r.entries, avgHappiness: r.avgHappiness });
 
   const zones = db().prepare("SELECT id, name FROM zones ORDER BY id").all() as { id: number; name: string }[];
   const grid: HeatmapCell[] = [];
   for (const z of zones) {
     for (let hour = 0; hour < 24; hour++) {
-      grid.push({ zoneId: z.id, zoneName: z.name, hour, entries: byKey.get(`${z.id}-${hour}`) ?? 0 });
+      const found = byKey.get(`${z.id}-${hour}`);
+      grid.push({ zoneId: z.id, zoneName: z.name, hour, entries: found?.entries ?? 0, avgHappiness: found?.avgHappiness ?? null });
     }
   }
   return grid;
@@ -482,6 +506,23 @@ export function getGenderBreakdown(range: DateRange): GenderBreakdownRow[] {
   return rows.map((r) => ({ ...r, percent: (r.count / total) * 100 }));
 }
 
+export interface GenderHappinessRow {
+  gender: string;
+  avgHappiness: number;
+  samples: number;
+}
+
+export function getHappinessByGender(range: DateRange): GenderHappinessRow[] {
+  return db()
+    .prepare(
+      `SELECT vi.gender as gender, AVG(v.happiness_score) as avgHappiness, COUNT(*) as samples
+       FROM visitors vi JOIN visits v ON v.visitor_id = vi.id
+       WHERE v.date BETWEEN ? AND ?
+       GROUP BY vi.gender`
+    )
+    .all(range.start, range.end) as GenderHappinessRow[];
+}
+
 const AGE_BAND_ORDER = ["10s", "20s", "30s", "40s", "50s", "60s", "70s", "80s"];
 
 export interface AgeBreakdownRow {
@@ -506,6 +547,25 @@ export function getAgeBreakdown(range: DateRange): AgeBreakdownRow[] {
     count: byBand.get(band)!,
     percent: (byBand.get(band)! / total) * 100,
   }));
+}
+
+export interface AgeHappinessRow {
+  ageBand: string;
+  avgHappiness: number;
+  samples: number;
+}
+
+export function getHappinessByAge(range: DateRange): AgeHappinessRow[] {
+  const rows = db()
+    .prepare(
+      `SELECT vi.age_band as ageBand, AVG(v.happiness_score) as avgHappiness, COUNT(*) as samples
+       FROM visitors vi JOIN visits v ON v.visitor_id = vi.id
+       WHERE v.date BETWEEN ? AND ?
+       GROUP BY vi.age_band`
+    )
+    .all(range.start, range.end) as AgeHappinessRow[];
+  const byBand = new Map(rows.map((r) => [r.ageBand, r]));
+  return AGE_BAND_ORDER.filter((band) => byBand.has(band)).map((band) => byBand.get(band)!);
 }
 
 export interface DayHourCell {

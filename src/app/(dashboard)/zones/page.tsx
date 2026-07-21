@@ -9,16 +9,23 @@ import { ZoneTreemap } from "@/components/charts/ZoneTreemap";
 import { ZoneTimeSeriesChart } from "@/components/charts/ZoneTimeSeriesChart";
 import { WeekendToggle } from "@/components/WeekendToggle";
 import { GrowBar } from "@/components/GrowBar";
+import { ZoneBreakdownList } from "@/components/ZoneBreakdownList";
+import { LensToggle, type Lens } from "@/components/LensToggle";
+
+function formatCompact(n: number): string {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : n.toLocaleString();
+}
 
 export default async function ZonesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ start?: string; end?: string; weekends?: string }>;
+  searchParams: Promise<{ start?: string; end?: string; weekends?: string; lens?: string }>;
 }) {
   const params = await searchParams;
   const range = resolveRange(params);
   const maxDate = getDatasetMaxDate();
   const includeWeekends = params.weekends !== "0";
+  const lens: Lens = params.lens === "happiness" ? "happiness" : "visits";
 
   const footfall = getZoneFootfall(range);
   const happinessByZone = getHappinessByZone(range);
@@ -48,6 +55,14 @@ export default async function ZonesPage({
   }
   const timeSeriesData = Array.from(byDate.values());
 
+  const happinessListRows = happinessByZone.map((z) => ({
+    name: z.name,
+    widthPercent: (z.avgHappiness / 10) * 100,
+    valueLabel: `${z.avgHappiness.toFixed(1)}/10`,
+    color: sentimentColor(z.avgHappiness),
+    sublabel: `${formatCompact(z.samples)} happiness checks`,
+  }));
+
   return (
     <div>
       <PageHeader
@@ -57,52 +72,80 @@ export default async function ZonesPage({
         maxDate={maxDate}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        <Card>
-          <CardTitle subtitle="Block size = entries. Every zone entry counted, including pass-through.">
-            Traffic by zone
-          </CardTitle>
-          <ZoneTreemap data={trafficTreemapData} />
-        </Card>
-        <Card>
-          <CardTitle subtitle="Block size = happiness score. Red is unhappy, sage is happy.">
-            Happiness by zone
-          </CardTitle>
-          <ZoneTreemap data={happinessTreemapData} />
-        </Card>
+      <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+        <LensToggle lens={lens} />
+        <span className="text-xs text-foreground/40">
+          {lens === "visits" ? "Visits lens — footfall & movement" : "Happiness lens — colour maps to sentiment"}
+        </span>
       </div>
 
-      <Card className="mb-4">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <CardTitle subtitle="Daily zone entries, stacked by zone">Zone entries over time</CardTitle>
-          <WeekendToggle enabled={includeWeekends} />
-        </div>
-        <ZoneTimeSeriesChart data={timeSeriesData} zoneNames={zoneNames} />
-      </Card>
+      {lens === "visits" ? (
+        <>
+          <Card className="mb-4">
+            <CardTitle subtitle="Block size = entries. Every zone entry counted, including pass-through.">
+              Traffic by zone
+            </CardTitle>
+            <ZoneTreemap data={trafficTreemapData} />
+          </Card>
 
-      <Card className="mb-4">
-        <CardTitle subtitle="Every zone entry counted, including pass-through — measures movement & frequency, not unique visits">
-          Traffic density by zone
-        </CardTitle>
-        <div className="space-y-3">
-          {footfall.map((z) => (
-            <div key={z.id} className="flex items-center gap-3">
-              <span className="w-36 shrink-0 text-sm text-foreground/70 truncate">{z.name}</span>
-              <div className="flex-1 h-2 rounded-full bg-surface-muted overflow-hidden">
-                <GrowBar widthPercent={(z.entries / maxEntries) * 100} className="bg-chart-red" />
-              </div>
-              <span className="w-16 text-right text-sm board-numerals">{z.entries.toLocaleString()}</span>
-              <span className="w-20 text-right text-xs text-foreground/50">{z.avgHappiness.toFixed(1)} mood</span>
-              <span className="w-24 text-right text-xs text-foreground/50">{Math.round(z.avgDurationMinutes)} min avg</span>
+          <Card className="mb-4">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <CardTitle subtitle="Daily zone entries, stacked by zone">Zone entries over time</CardTitle>
+              <WeekendToggle enabled={includeWeekends} />
             </div>
-          ))}
-        </div>
-      </Card>
+            <ZoneTimeSeriesChart data={timeSeriesData} zoneNames={zoneNames} />
+          </Card>
 
-      <Card>
-        <CardTitle subtitle="Zone entries by hour of day across the selected range">Time-of-day heatmap</CardTitle>
-        <ZoneHeatmap cells={heatmap} />
-      </Card>
+          <Card className="mb-4">
+            <CardTitle subtitle="Every zone entry counted, including pass-through — measures movement & frequency, not unique visits">
+              Traffic density by zone
+            </CardTitle>
+            <div className="space-y-3">
+              {footfall.map((z) => (
+                <div key={z.id} className="flex items-center gap-3">
+                  <span className="w-36 shrink-0 text-sm text-foreground/70 truncate">{z.name}</span>
+                  <div className="flex-1 h-2 rounded-full bg-surface-muted overflow-hidden">
+                    <GrowBar widthPercent={(z.entries / maxEntries) * 100} className="bg-chart-red" />
+                  </div>
+                  <span className="w-16 text-right text-sm board-numerals">{z.entries.toLocaleString()}</span>
+                  <span className="w-20 text-right text-xs text-foreground/50">{z.avgHappiness.toFixed(1)} mood</span>
+                  <span className="w-24 text-right text-xs text-foreground/50">
+                    {Math.round(z.avgDurationMinutes)} min avg
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <CardTitle subtitle="Zone entries by hour of day across the selected range">Time-of-day heatmap</CardTitle>
+            <ZoneHeatmap cells={heatmap} mode="traffic" />
+          </Card>
+        </>
+      ) : (
+        <>
+          <Card className="mb-4">
+            <CardTitle subtitle="Block size = happiness score. Red is unhappy, sage is happy.">
+              Happiness by zone
+            </CardTitle>
+            <ZoneTreemap data={happinessTreemapData} />
+          </Card>
+
+          <Card className="mb-4">
+            <CardTitle subtitle="Average happiness score recorded per zone, with sample size">
+              Happiness by zone
+            </CardTitle>
+            <ZoneBreakdownList rows={happinessListRows} />
+          </Card>
+
+          <Card>
+            <CardTitle subtitle="Average happiness score by hour of day across the selected range">
+              Time-of-day heatmap
+            </CardTitle>
+            <ZoneHeatmap cells={heatmap} mode="happiness" />
+          </Card>
+        </>
+      )}
     </div>
   );
 }

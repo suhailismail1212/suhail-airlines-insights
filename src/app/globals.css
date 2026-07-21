@@ -8,6 +8,7 @@
   --color-red-600: #8c1d1a;
   --color-red-500: #a3231f;
   --color-red-400: #c1302b;
+  --color-red-300: #e0342a;
 
   --color-gold-600: #8a7238;
   --color-gold-500: #a68a46;
@@ -31,6 +32,7 @@
   --color-red-600: var(--color-red-600);
   --color-red-500: var(--color-red-500);
   --color-red-400: var(--color-red-400);
+  --color-red-300: var(--color-red-300);
   --color-gold-600: var(--color-gold-600);
   --color-gold-500: var(--color-gold-500);
   --color-gold-400: var(--color-gold-400);

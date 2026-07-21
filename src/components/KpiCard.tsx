@@ -25,7 +25,7 @@ export function KpiCard({
         {Icon && <Icon className="w-4 h-4 text-foreground/30" strokeWidth={1.75} />}
       </div>
       <div className="flex items-end justify-between gap-2">
-        <span className="text-2xl font-medium board-numerals">
+        <span className={clsx("text-2xl font-medium board-numerals", typeof value === "number" && "text-red-300")}>
           {typeof value === "number" ? <AnimatedNumber value={value} format={format} /> : value}
         </span>
         {deltaPct != null && (

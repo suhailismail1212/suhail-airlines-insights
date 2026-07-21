@@ -10,20 +10,24 @@ import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
  * swaps to the hovered segment's value, the same "hover reveals detail"
  * idea as the Sankey flow highlight, without two things fighting for the
  * same pixels.
+ *
+ * `value` always drives wedge size (a share); `displayText` is what gets
+ * shown for that segment on hover, decoupled from `value` so a happiness
+ * donut can size wedges by visitor share while displaying an avg score.
  */
 export function DonutChart({
   data,
   colors,
-  totalLabel,
+  centerValue,
+  centerLabel,
 }: {
-  data: { name: string; value: number }[];
+  data: { name: string; value: number; displayText?: string; percent?: number }[];
   colors: string[];
-  totalLabel?: string;
+  centerValue: string;
+  centerLabel: string;
 }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const total = data.reduce((s, d) => s + d.value, 0);
   const active = activeIndex != null ? data[activeIndex] : null;
-  const activePct = active && total ? ((active.value / total) * 100).toFixed(1) : null;
 
   return (
     <div className="relative w-[170px] h-[170px] shrink-0" onMouseLeave={() => setActiveIndex(null)}>
@@ -54,11 +58,11 @@ export function DonutChart({
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-4 text-center">
-        <span className="text-xl font-medium board-numerals">
-          {(active ? active.value : total).toLocaleString()}
+        <span className="text-xl font-medium board-numerals text-red-300">
+          {active ? active.displayText ?? active.value.toLocaleString() : centerValue}
         </span>
         <span className="text-[10px] text-foreground/40 uppercase tracking-wide truncate max-w-full">
-          {active ? `${active.name}${activePct ? ` · ${activePct}%` : ""}` : totalLabel}
+          {active ? `${active.name}${active.percent != null ? ` · ${active.percent.toFixed(1)}%` : ""}` : centerLabel}
         </span>
       </div>
     </div>

@@ -5,7 +5,15 @@ import { clsx } from "clsx";
 
 /** A width-percent bar that grows in from 0 on mount, rather than
  * appearing at full width immediately. */
-export function GrowBar({ widthPercent, className }: { widthPercent: number; className?: string }) {
+export function GrowBar({
+  widthPercent,
+  className,
+  color,
+}: {
+  widthPercent: number;
+  className?: string;
+  color?: string;
+}) {
   const [width, setWidth] = useState(0);
 
   useEffect(() => {
@@ -22,7 +30,7 @@ export function GrowBar({ widthPercent, className }: { widthPercent: number; cla
   return (
     <div
       className={clsx("h-full rounded-full transition-[width] duration-500 ease-out", className)}
-      style={{ width: `${width}%` }}
+      style={{ width: `${width}%`, ...(color ? { background: color } : {}) }}
     />
   );
 }

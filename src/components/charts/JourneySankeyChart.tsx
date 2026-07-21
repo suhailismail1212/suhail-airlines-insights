@@ -18,17 +18,23 @@ function buildSankeyData(links: SankeyLink[]) {
 }
 
 function SankeyNode(props: unknown) {
-  const { x, y, width, height, payload } = props as {
+  const { x, y, width, height, payload, mode } = props as {
     x: number;
     y: number;
     width: number;
     height: number;
     payload: { name: string };
+    mode: "visits" | "happiness";
   };
   const isTerminal = payload.name === "Entry" || payload.name === "Exit";
+  const fill = isTerminal
+    ? "var(--color-chart-olive)"
+    : mode === "happiness"
+      ? "var(--color-chart-sage)"
+      : "var(--color-chart-red)";
   return (
     <Layer>
-      <rect x={x} y={y} width={width} height={height} fill={isTerminal ? "var(--color-chart-olive)" : "var(--color-chart-red)"} rx={2} />
+      <rect x={x} y={y} width={width} height={height} fill={fill} rx={2} />
       <text
         x={x + width + 6}
         y={y + height / 2}
@@ -43,9 +49,15 @@ function SankeyNode(props: unknown) {
   );
 }
 
+function makeSankeyNode(mode: "visits" | "happiness") {
+  return function Node(props: unknown) {
+    return SankeyNode({ ...(props as object), mode });
+  };
+}
+
 /** Highlights the hovered flow — that link only, from its source bar to the
  * next bar — and dims the rest, rather than leaving every path flat. */
-function makeSankeyLink(hoveredIndex: number | null) {
+function makeSankeyLink(hoveredIndex: number | null, mode: "visits" | "happiness") {
   return function SankeyLinkPath(props: unknown) {
     const {
       sourceX,
@@ -72,7 +84,7 @@ function makeSankeyLink(hoveredIndex: number | null) {
       <path
         d={`M${sourceX},${sourceY}C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`}
         fill="none"
-        stroke="var(--color-chart-sage)"
+        stroke={mode === "happiness" ? "var(--color-chart-sage)" : "var(--color-chart-red)"}
         strokeWidth={Math.max(linkWidth, 1)}
         strokeOpacity={isHovered ? 0.65 : isDimmed ? 0.08 : 0.25}
         style={{ transition: "stroke-opacity 120ms ease", cursor: "pointer" }}
@@ -81,7 +93,7 @@ function makeSankeyLink(hoveredIndex: number | null) {
   };
 }
 
-export function JourneySankeyChart({ links }: { links: SankeyLink[] }) {
+export function JourneySankeyChart({ links, mode = "visits" }: { links: SankeyLink[]; mode?: "visits" | "happiness" }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const data = buildSankeyData(links);
 
@@ -89,8 +101,8 @@ export function JourneySankeyChart({ links }: { links: SankeyLink[] }) {
     <ResponsiveContainer width="100%" height={480}>
       <Sankey
         data={data}
-        node={SankeyNode}
-        link={makeSankeyLink(hoveredIndex)}
+        node={makeSankeyNode(mode)}
+        link={makeSankeyLink(hoveredIndex, mode)}
         nodeWidth={10}
         nodePadding={22}
         margin={{ left: 16, right: 90, top: 16, bottom: 16 }}

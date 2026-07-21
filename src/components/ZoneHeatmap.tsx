@@ -1,10 +1,18 @@
 import type { HeatmapCell } from "@/lib/queries";
-import { intensityColor } from "@/lib/colorScale";
+import { intensityColor, sentimentColor } from "@/lib/colorScale";
 
-export function ZoneHeatmap({ cells }: { cells: HeatmapCell[] }) {
+export function ZoneHeatmap({ cells, mode = "traffic" }: { cells: HeatmapCell[]; mode?: "traffic" | "happiness" }) {
   const zoneNames = Array.from(new Set(cells.map((c) => c.zoneName)));
-  const max = Math.max(1, ...cells.map((c) => c.entries));
-  const byKey = new Map(cells.map((c) => [`${c.zoneName}-${c.hour}`, c.entries]));
+  const maxEntries = Math.max(1, ...cells.map((c) => c.entries));
+  const byKey = new Map(cells.map((c) => [`${c.zoneName}-${c.hour}`, c]));
+
+  function cellStyle(cell: HeatmapCell | undefined): React.CSSProperties {
+    if (mode === "traffic") return { backgroundColor: intensityColor(cell?.entries ?? 0, maxEntries) };
+    if (!cell || cell.avgHappiness == null || cell.entries < 3) {
+      return { backgroundColor: "var(--color-surface-muted)" };
+    }
+    return { backgroundColor: sentimentColor(cell.avgHappiness) };
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -24,10 +32,14 @@ export function ZoneHeatmap({ cells }: { cells: HeatmapCell[] }) {
             <tr key={name}>
               <td className="text-right pr-2 text-foreground/70 whitespace-nowrap">{name}</td>
               {Array.from({ length: 24 }, (_, h) => {
-                const entries = byKey.get(`${name}-${h}`) ?? 0;
+                const cell = byKey.get(`${name}-${h}`);
+                const title =
+                  mode === "traffic"
+                    ? `${name} · ${h}:00 · ${cell?.entries ?? 0} entries`
+                    : `${name} · ${h}:00${cell?.avgHappiness != null ? ` · ${cell.avgHappiness.toFixed(1)} mood` : " · no data"}`;
                 return (
-                  <td key={h} title={`${name} · ${h}:00 · ${entries} entries`}>
-                    <div className="w-6 h-5 rounded-sm" style={{ backgroundColor: intensityColor(entries, max) }} />
+                  <td key={h} title={title}>
+                    <div className="w-6 h-5 rounded-sm" style={cellStyle(cell)} />
                   </td>
                 );
               })}
